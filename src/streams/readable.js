@@ -1,6 +1,6 @@
 'use strict';
 
-const { EventEmitter } = require('events');
+const { EventEmitter } = require('node:events');
 const { PULL_EVENT, PUSH_EVENT, DEFAULT_HIGH_WATER_MARK, MAX_HIGH_WATER_MARK } = require('./config');
 
 class CustomReadable extends EventEmitter {
@@ -30,7 +30,7 @@ class CustomReadable extends EventEmitter {
     return data;
   };
 
-  async finalize(writable) {
+  finalize = async writable => {
     const waitWritableEvent = EventEmitter.once.bind(writable);
     const onError = () => this.terminate();
     writable.once('error', onError);
@@ -43,51 +43,51 @@ class CustomReadable extends EventEmitter {
     await waitWritableEvent('close');
     await this.close();
     writable.removeListener('error', onError);
-  }
+  };
 
   pipe = writable => (this.finalize(writable), writable);
 
-  async toBlob(type = '') {
+  toBlob = async (type = '') => {
     const chunks = [];
     for await (const chunk of this) chunks.push(chunk);
     return new Blob(chunks, { type });
-  }
+  };
 
-  async close() {
+  close = async () => {
     await this.stop();
     // this.#status = 'closed';
-  }
+  };
 
-  async terminate() {
+  terminate = async () => {
     await this.stop();
     // this.#status = 'terminated';
-  }
+  };
 
-  async stop() {
+  stop = async () => {
     while (this.#bytesRead !== this.size) await EventEmitter.once(this, PULL_EVENT);
     this.#streaming = false;
     this.emit(PUSH_EVENT, null);
-  }
+  };
 
-  async read() {
+  read = async () => {
     if (this.#queue.length > 0) return this.pull();
     const finisher = await EventEmitter.once(this, PUSH_EVENT);
     if (finisher === null) return null;
     return this.pull();
-  }
+  };
 
-  pull() {
+  pull = () => {
     const data = this.#queue.shift();
     this.#bytesRead += data.length;
     this.emit(PULL_EVENT);
     return data;
-  }
+  };
 
-  checkStreamLimits() {
+  checkStreamLimits = () => {
     // increase queue if source is much faster than reader implement remote backpressure to resolve
     if (this.listenerCount(PULL_EVENT) >= this.#maxListenersCount) ++this.#highWaterMark;
     if (this.#highWaterMark > MAX_HIGH_WATER_MARK) throw new Error('Stream overflow occurred');
-  }
+  };
 
   async *[Symbol.asyncIterator]() {
     while (this.#streaming) {

@@ -2,23 +2,8 @@
 
 const { HEADERS, MIME_TYPES, TOKEN, COOKIE_HOST, COOKIE_DELETE } = require('./config');
 const Transport = require('./transport');
-
-const parseHost = host => {
-  if (!host) return '';
-  const portOffset = host.indexOf(':');
-  if (portOffset > -1) host = host.substr(0, portOffset);
-  return host;
-};
-
-const parseCookies = cookie => {
-  const values = [];
-  const items = cookie.split(';');
-  for (const item of items) {
-    const [key, val = ''] = item.split('=');
-    values.push([key.trim(), val.trim()]);
-  }
-  return Object.fromEntries(values);
-};
+const { net } = require('leadutils');
+const { parseCookie, removePort } = net;
 
 class HTTPTransport extends Transport {
   constructor(server, req, res) {
@@ -29,45 +14,23 @@ class HTTPTransport extends Transport {
   }
 
   write = (data, code = 200, ext = 'json') => {
-    const { res } = this;
-    if (res.writableEnded) return;
-    const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-    res.writeHead(code, { ...HEADERS, 'Content-Type': mimeType });
-    res.end(data);
+    if (this.res.writableEnded) return;
+    this.res.writeHead(code, { ...HEADERS, 'Content-Type': MIME_TYPES[ext] || MIME_TYPES.html });
+    this.res.end(data);
   };
 
   redirect = (location, code = 302) => {
-    const { res } = this;
-    if (res.headersSent) return;
-    res.writeHead(code, { Location: location, ...HEADERS }), res.end();
+    if (this.res.headersSent) return;
+    this.res.writeHead(code, { Location: location, ...HEADERS }), this.res.end();
   };
 
-  getCookies = () => {
-    const { cookie } = this.req.headers;
-    if (!cookie) return {};
-    return parseCookies(cookie);
-  };
+  sendSessionCookie = token =>
+    this.req.setHeader('Set-Cookie', `${TOKEN}=${token}; ${COOKIE_HOST}=${removePort(this.req.headers.host)}`);
 
-  sendSessionCookie = token => {
-    const host = parseHost(this.req.headers.host);
-    const cookie = `${TOKEN}=${token}; ${COOKIE_HOST}=${host}`;
-    this.req.setHeader('Set-Cookie', cookie);
-  };
-
-  removeSessionCookie = () => {
-    const host = parseHost(this.req.headers.host);
-    this.req.setHeader('Set-Cookie', COOKIE_DELETE + host);
-  };
-
-  options = () => {
-    const { res } = this;
-    if (res.headersSent) return;
-    res.writeHead(200, HEADERS), res.end();
-  };
-
-  close = () => {
-    this.error(503), this.req.connection.close();
-  };
+  getCookies = () => (!this.req.headers.cookie ? {} : parseCookie(this.req.headers.cookie));
+  removeSessionCookie = () => void this.req.setHeader('Set-Cookie', COOKIE_DELETE + removePort(this.req.headers.host));
+  close = () => void (this.error(503), this.req.connection.close());
+  options = () => void (this.res.headersSent ? null : (this.res.writeHead(200, HEADERS), this.res.end()));
 }
 
 module.exports = { HTTPTransport };

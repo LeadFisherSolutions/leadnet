@@ -12,8 +12,7 @@ const chunkDecode = chunk => {
 const chunkEncode = (id, payload) => {
   const chunk = new Uint8Array(ID_LENGTH + payload.length);
   const view = new DataView(chunk.buffer);
-  view.setInt32(0, id);
-  chunk.set(payload, ID_LENGTH);
+  view.setInt32(0, id), chunk.set(payload, ID_LENGTH);
   return chunk;
 };
 

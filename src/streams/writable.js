@@ -1,6 +1,6 @@
 'use strict';
 
-const { EventEmitter } = require('events');
+const { EventEmitter } = require('node:events');
 const { chunkEncode } = require('./chunk');
 
 class CustomWritable extends EventEmitter {
@@ -12,21 +12,10 @@ class CustomWritable extends EventEmitter {
     this.name = name;
     this.size = size;
     this.#transport = transport;
-    this.#open();
+    this.#transport.send(JSON.stringify({ type: 'stream', id, name, size }));
   }
 
-  #open = () => {
-    const { id, name, size } = this;
-    const packet = { type: 'stream', id, name, size };
-    this.#transport.send(JSON.stringify(packet));
-  };
-
-  write = data => {
-    const chunk = chunkEncode(this.id, data);
-    this.#transport.send(chunk);
-    return true;
-  };
-
+  write = data => (this.#transport.send(chunkEncode(this.id, data)), true);
   end = () => void this.#transport.send(JSON.stringify({ type: 'stream', id: this.id, status: 'end' }));
   terminate = () => void this.#transport.send(JSON.stringify({ type: 'stream', id: this.id, status: 'terminate' }));
 }

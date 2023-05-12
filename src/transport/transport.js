@@ -14,17 +14,13 @@ class Transport extends EventEmitter {
   }
 
   error = (code = 500, { id, error = null, httpCode = null } = {}) => {
-    const { server, req, ip } = this;
-    const { console } = server;
-    const { url, method } = req;
-    if (!httpCode) httpCode = (error && error.httpCOde) || code;
+    if (!httpCode) httpCode = (error && error.httpCode) || code;
     const status = http.STATUS_CODES[httpCode];
     const pass = httpCode < 500 || httpCode > 599;
     const message = pass && error ? error.message : status || UNKNOWN;
     const reason = `${httpCode}\t${code}\t${error ? error.stack : status}`;
-    console.error(`${ip}\t${method}\t${url}\t${reason}`);
-    const packet = { type: 'callback', id, error: { message, code } };
-    this.send(packet, httpCode);
+    this.server.console.error(`${this.ip}\t${this.req.method}\t${this.req.url}\t${reason}`);
+    this.send({ type: 'callback', id, error: { message, code } }, httpCode);
   };
 
   send = (obj, code = 200) => void this.write(JSON.stringify(obj), code, 'json');
