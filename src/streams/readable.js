@@ -1,11 +1,12 @@
 'use strict';
 
 const { EventEmitter } = require('node:events');
+const { Blob } = require('node:buffer');
 const { PULL_EVENT, PUSH_EVENT, DEFAULT_HIGH_WATER_MARK, MAX_HIGH_WATER_MARK } = require('./config');
 
 class CustomReadable extends EventEmitter {
+  status = 'active';
   #bytesRead = 0;
-  // #status = 'active';
   #streaming = true;
   #maxListenersCount = this.getMaxListeners() - 1;
   #queue = [];
@@ -55,12 +56,12 @@ class CustomReadable extends EventEmitter {
 
   close = async () => {
     await this.stop();
-    // this.#status = 'closed';
+    this.status = 'closed';
   };
 
   terminate = async () => {
     await this.stop();
-    // this.#status = 'terminated';
+    this.status = 'terminated';
   };
 
   stop = async () => {

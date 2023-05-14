@@ -2,7 +2,6 @@
 
 const http = require('node:http');
 const { EventEmitter } = require('node:events');
-
 const UNKNOWN = 'Unknown error';
 
 class Transport extends EventEmitter {

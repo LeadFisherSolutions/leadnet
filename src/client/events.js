@@ -5,12 +5,10 @@ class EventEmitter {
   #listeners = 10;
 
   static once = (emitter, name) => new Promise(resolve => emitter.once(name, resolve));
-
-  listenerCount = name => {
-    const event = this.#events.get(name);
-    if (event) return event.size();
-    return 0;
-  };
+  eventNames = () => this.#events.keys();
+  listeners = name => this.#events.get(name);
+  listenerCount = name => this.#events.get(name)?.size ?? 0;
+  clear = name => void (!name ? this.#events.clear() : this.#events.delete(name));
 
   on = (name, fn) => {
     const event = this.#events.get(name);
@@ -21,10 +19,7 @@ class EventEmitter {
   };
 
   once = (name, fn) => {
-    const dispose = (...args) => {
-      this.remove(name, dispose);
-      return fn(...args);
-    };
+    const dispose = (...args) => (this.remove(name, dispose), fn(...args));
     this.once(name, dispose);
   };
 
@@ -34,18 +29,10 @@ class EventEmitter {
     for (const fn of event.values()) fn(...args);
   };
 
-  listeners = name => this.#events.get(name);
-  eventNames = () => this.#events.keys();
-
   off = (name, fn) => {
     const event = this.#events.get(name);
     if (!event) return;
     event.has(fn) && event.delete(fn);
-  };
-
-  clear = name => {
-    if (!name) this.#events.clear();
-    else this.#events.delete(name);
   };
 }
 

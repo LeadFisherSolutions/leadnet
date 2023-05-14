@@ -1,3 +1,7 @@
-# LEAD.NET
+<h1 align="center">LEAD.NET</h1>
 
-LeadFisher workspace example
+- [x] Streams implementation
+- [x] Server transport implementation
+- [ ] Server
+- [ ] Client
+- [ ] Tests

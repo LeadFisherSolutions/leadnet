@@ -2,31 +2,8 @@
 
 const { EventEmitter } = require('node:events');
 const { CustomWritable } = require('../streams');
-const { randomUUID } = require('node:crypto');
-
-const SESSIONS = new Map(); // token: Session
-
-const createProxy = (data, save) =>
-  new Proxy(data, {
-    get: (data, key) => Reflect.get(data, key),
-    set: (data, key, value) => {
-      const res = Reflect.set(data, key, value);
-      save && save(data);
-      return res;
-    },
-  });
-
-function Session(token, data, { application, console }) {
-  this.token = token;
-  this.state = createProxy(data, data => void application.auth.saveSession(token, data).catch(console.error));
-}
-
-function Context(client) {
-  this.client = client;
-  this.uuid = randomUUID();
-  this.state = {};
-  this.session = client?.session ?? null;
-}
+const { SESSIONS } = require('./config');
+const { Session, Context } = require('./utils');
 
 class Client extends EventEmitter {
   #streamId = 0;
@@ -100,4 +77,4 @@ class Client extends EventEmitter {
   };
 }
 
-module.exports = { Client };
+module.exports = Client;
