@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('./events');
+const EventEmitter = require('../../dist/events');
 
 class CustomError extends Error {
   constructor({ message, code }) {

@@ -1,8 +1,8 @@
 {
   "name": "leadnet",
-  "description": "[Node js] Leadfisher transport protocol",
-  "author": "Alexander Ivanov <sashapop101@gmail.com>",
   "version": "1.0.0",
+  "author": "Alexander Ivanov <sashapop101@gmail.com>",
+  "description": "[Node js] Leadfisher transport protocol",
   "license": "MIT",
   "homepage": "https://leadfisher.ru",
   "packageManager": "npm@9.6.4",
@@ -37,6 +37,14 @@
     "type": "git",
     "url": "git+https://github.com/LeadFisherSolutions/leadnet.git"
   },
+  "browser": {
+    "./index.js": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "lib/",
+    "index.d.ts"
+  ],
   "engines": {
     "node": ">= 20"
   },

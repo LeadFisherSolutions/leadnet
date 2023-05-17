@@ -1,5 +1,5 @@
 'use strict';
 
-const EventEmitter = require('./events');
+const EventEmitter = require('../../dist/events');
 
 module.exports = { EventEmitter };

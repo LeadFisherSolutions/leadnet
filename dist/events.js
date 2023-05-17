@@ -1,6 +1,4 @@
-'use strict';
-
-class EventEmitter {
+export default class EventEmitter {
   #events = new Map();
   #listeners = 10;
 
@@ -35,5 +33,3 @@ class EventEmitter {
     event.has(fn) && event.delete(fn);
   };
 }
-
-module.exports = EventEmitter;

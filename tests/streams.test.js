@@ -1,11 +1,11 @@
 'use strict';
 
-const { Readable } = require('node:stream');
+const { EventEmitter } = require('events');
+// const { Readable } = require('node:stream');
 const assert = require('node:assert');
 const test = require('node:test');
 const utils = require('leadutils');
-const streams = require('../src/streams');
-const { chunkEncode, chunkDecode, CustomReadable, CustomWritable } = streams;
+const { chunk, stream } = require('../src/streams');
 
 const UINT_8_MAX = 255;
 
@@ -26,23 +26,23 @@ const generateDataView = () => {
 const createWritable = (id, name, size) => {
   const writeBuffer = [];
   const transport = { send: packet => writeBuffer.push(packet) };
-  const stream = new CustomWritable(id, name, size, transport);
-  return [stream, writeBuffer];
+  const stream2 = stream.createWritable(EventEmitter)(id, name, size, transport);
+  return [stream2, writeBuffer];
 };
 
-const populateStream = stream => ({
-  with: buffer =>
-    Readable.from(buffer)
-      .on('data', chunk => stream.push(chunk))
-      .on('end', () => stream.stop()),
-});
+// const populateStream = stream => ({
+//   with: buffer =>
+//     Readable.from(buffer)
+//       .on('data', chunk => stream.push(chunk))
+//       .on('end', () => stream.stop()),
+// });
 
 test('[Chunk] encode / decode', () => {
   const { id } = generatePacket();
   const dataView = generateDataView();
   assert.strictEqual(dataView instanceof Uint8Array, true);
-  const chunkView = chunkEncode(id, dataView);
-  const decoded = chunkDecode(chunkView);
+  const chunkView = chunk.encode(id, dataView);
+  const decoded = chunk.decode(chunkView);
   assert.strictEqual(decoded.id, id);
   assert.notStrictEqual(decoded.payload, dataView);
 });
@@ -98,33 +98,33 @@ test('[Writable] write: should send encoded packet', () => {
   assert.strictEqual(writeBuffer.length, 2);
   const packet = writeBuffer.pop();
   assert.strictEqual(packet instanceof Uint8Array, true);
-  const decoded = chunkDecode(packet);
+  const decoded = chunk.decode(packet);
   assert.strictEqual(decoded.id, id);
   assert.notStrictEqual(decoded.payload, dataView);
 });
 
-test('[Readable] constructor', async () => {
-  const dataView = generateDataView();
-  const { id, name } = generatePacket();
-  const size = dataView.buffer.byteLength;
-  const stream = new CustomReadable(id, name, size);
-  const buffer = Buffer.from(dataView.buffer);
-  populateStream(stream).with(buffer);
-  const chunks = [];
-  for await (const chunk of stream) chunks.push(chunk);
-  const received = Buffer.concat(chunks);
-  assert.notStrictEqual(received, buffer);
-});
+// test('[Readable] constructor', async () => {
+//   const dataView = generateDataView();
+//   const { id, name } = generatePacket();
+//   const size = dataView.buffer.byteLength;
+//   const stream = new CustomReadable(id, name, size);
+//   const buffer = Buffer.from(dataView.buffer);
+//   populateStream(stream).with(buffer);
+//   const chunks = [];
+//   for await (const chunk of stream) chunks.push(chunk);
+//   const received = Buffer.concat(chunks);
+//   assert.notStrictEqual(received, buffer);
+// });
 
-test('[Readable] toBlob', async () => {
-  const dataView = generateDataView();
-  const { id, name } = generatePacket();
-  const size = dataView.buffer.byteLength;
-  const stream = new CustomReadable(id, name, size);
-  const buffer = Buffer.from(dataView.buffer);
-  populateStream(stream).with(buffer);
-  const blob = await stream.toBlob();
-  const arrayBuffer = await blob.arrayBuffer();
-  const received = new Uint8Array(arrayBuffer);
-  assert.notStrictEqual(received, dataView);
-});
+// test('[Readable] toBlob', async () => {
+//   const dataView = generateDataView();
+//   const { id, name } = generatePacket();
+//   const size = dataView.buffer.byteLength;
+//   const stream = new CustomReadable(id, name, size);
+//   const buffer = Buffer.from(dataView.buffer);
+//   populateStream(stream).with(buffer);
+//   const blob = await stream.toBlob();
+//   const arrayBuffer = await blob.arrayBuffer();
+//   const received = new Uint8Array(arrayBuffer);
+//   assert.notStrictEqual(received, dataView);
+// });

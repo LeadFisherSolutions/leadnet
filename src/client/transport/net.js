@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('../events');
+const EventEmitter = require('../../../dist/events');
 const { CustomWritable } = require('src/streams');
 
 class Net extends EventEmitter {

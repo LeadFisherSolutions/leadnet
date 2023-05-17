@@ -1,7 +1,7 @@
 'use strict';
 
-const { CustomWritable } = require('./writable');
-const { CustomReadable } = require('./readable');
-const { chunkDecode, chunkEncode } = require('./chunk');
+const createWritable = require('./writable');
+const createReadable = require('./readable');
+const chunk = require('./chunk');
 
-module.exports = { CustomWritable, CustomReadable, chunkDecode, chunkEncode };
+module.exports = { chunk, stream: { createWritable, createReadable } };
