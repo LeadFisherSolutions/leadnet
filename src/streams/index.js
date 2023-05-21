@@ -1,7 +1,7 @@
 'use strict';
 
-const createWritable = require('./writable');
-const createReadable = require('./readable');
-const chunk = require('./chunk');
+const Writable = require('./writable');
+const Readable = require('./readable');
+const utils = require('./utils');
 
-module.exports = { chunk, stream: { createWritable, createReadable } };
+module.exports = { ...utils, stream: { Writable, Readable } };

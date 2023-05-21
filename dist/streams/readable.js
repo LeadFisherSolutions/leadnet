@@ -1,10 +1,8 @@
-'use strict';
+import { EventEmitter } from 'node:events';
+import { PULL_EVENT, PUSH_EVENT, DEFAULT_HIGH_WATER_MARK, MAX_HIGH_WATER_MARK } from '../config/stream.config';
+import { blob } from './utils';
 
-const { EventEmitter } = require('node:events');
-const { PULL_EVENT, PUSH_EVENT, DEFAULT_HIGH_WATER_MARK, MAX_HIGH_WATER_MARK } = require('../config/stream.config');
-const { toBlob } = require('./utils');
-
-class Readable extends EventEmitter {
+export default class Readable extends EventEmitter {
   status = 'active';
   #bytesRead = 0;
   #streaming = true;
@@ -43,25 +41,25 @@ class Readable extends EventEmitter {
     writable.removeListener('error', onError);
   };
 
-  toBlob = toBlob.bind(null, this);
+  toBlob = blob.from.bind(null, this);
   pipe = writable => (this.finalize(writable), writable);
-  close = async () => (await this.stop(), (this.status = 'closed'));
-  terminate = async () => (await this.stop(), (this.status = 'terminated'));
+  close = async () => (await this.#stop(), (this.status = 'closed'));
+  terminate = async () => (await this.#stop(), (this.status = 'terminated'));
 
-  stop = async () => {
+  #stop = async () => {
     while (this.#bytesRead !== this.size) await EventEmitter.once(this, PULL_EVENT);
     this.#streaming = false;
     this.emit(PUSH_EVENT, null);
   };
 
   read = async () => {
-    if (this.#queue.length > 0) return this.pull();
+    if (this.#queue.length > 0) return this.#pull();
     const finisher = await EventEmitter.once(this, PUSH_EVENT);
     if (finisher === null) return null;
-    return this.pull();
+    return this.#pull();
   };
 
-  pull = () => {
+  #pull = () => {
     const data = this.#queue.shift();
     this.#bytesRead += data.length;
     this.emit(PULL_EVENT);
@@ -82,5 +80,3 @@ class Readable extends EventEmitter {
     }
   }
 }
-
-module.exports = Readable;

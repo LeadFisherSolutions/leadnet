@@ -1,6 +1,7 @@
+const MAX_LISTENERS = 10;
+
 export default class EventEmitter {
   #events = new Map();
-  #listeners = 10;
 
   static once = (emitter, name) => new Promise(resolve => emitter.once(name, resolve));
   eventNames = () => this.#events.keys();
@@ -11,7 +12,7 @@ export default class EventEmitter {
   on = (name, fn) => {
     const event = this.#events.get(name);
     if (!event) return void this.#events.set(name, new Set([fn]));
-    if (event.size >= this.#listeners) console.warn(`MaxListeners: possible memory leak detected.`);
+    if (event.size >= MAX_LISTENERS) console.warn(`MaxListeners: possible memory leak detected.`);
     event.add(fn);
     return void 0;
   };
@@ -29,7 +30,6 @@ export default class EventEmitter {
 
   off = (name, fn) => {
     const event = this.#events.get(name);
-    if (!event) return;
-    event.has(fn) && event.delete(fn);
+    event && event.has(fn) && event.delete(fn);
   };
 }

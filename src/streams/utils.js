@@ -1,6 +1,7 @@
 'use strict';
 
-const { ID_LENGTH } = require('../../config/stream.config.js');
+const { Blob } = require('node:buffer');
+const { ID_LENGTH } = require('../config/stream.config');
 
 const decode = chunk => {
   const view = new DataView(chunk.buffer);
@@ -17,4 +18,10 @@ const encode = (id, payload) => {
   return chunk;
 };
 
-module.exports = { decode, encode };
+const toBlob = async (readable, type = '') => {
+  const chunks = [];
+  for await (const chunk of readable) chunks.push(chunk);
+  return new Blob(chunks, { type });
+};
+
+module.exports = { chunk: { decode, encode }, toBlob };
